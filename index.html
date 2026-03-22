@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Manubeta">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="manifest" href="manifest.json">
+<title>💙 Manubeta Trading</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d0d0d;--bg2:#141414;--bg3:#1a1a1a;
+  --card:#1e1e1e;--border:#2a2a2a;--border2:#333;
+  --blue:#2563eb;--blue2:#3b82f6;
+  --green:#00c853;--green2:#00e676;
+  --red:#f44336;--red2:#ff5252;
+  --yellow:#ffd600;--purple:#7c3aed;
+  --text:#f0f0f0;--muted:#666;--muted2:#333;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;
+     min-height:100vh;overflow-x:hidden;padding-bottom:70px}
+.header{display:flex;align-items:center;gap:10px;padding:12px 14px;
+        background:var(--bg2);border-bottom:1px solid var(--border);
+        position:sticky;top:0;z-index:100}
+.hlogo{font-size:20px}
+.hinfo{flex:1}
+.htitle{font-size:15px;font-weight:700;color:var(--text)}
+.hsub{font-size:10px;color:var(--muted)}
+.hlive{display:flex;align-items:center;gap:5px;font-size:11px;
+       color:var(--green);background:rgba(0,200,83,0.1);
+       border:1px solid rgba(0,200,83,0.25);border-radius:100px;padding:4px 10px}
+.ldot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.hset{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);
+      padding:6px 10px;border-radius:7px;font-size:12px;cursor:pointer;border:none}
+
+/* TABS */
+.tabs{display:flex;background:var(--bg2);border-bottom:1px solid var(--border);
+      position:sticky;top:53px;z-index:99}
+.tab{flex:1;padding:10px 4px;font-size:12px;font-weight:600;color:var(--muted);
+     border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;
+     transition:all .2s}
+.tab.on{color:var(--blue2);border-bottom-color:var(--blue2)}
+
+.page{display:none;padding:12px}.page.on{display:block}
+
+/* SIGNAL */
+.sig-card{border-radius:12px;padding:14px;border:1px solid;margin-bottom:10px}
+.sig-card.long{background:rgba(0,200,83,0.07);border-color:rgba(0,200,83,0.25)}
+.sig-card.short{background:rgba(244,67,54,0.07);border-color:rgba(244,67,54,0.25)}
+.sig-card.wait{background:rgba(255,214,0,0.05);border-color:rgba(255,214,0,0.2)}
+.sig-badge{display:inline-block;padding:6px 16px;border-radius:100px;
+           font-size:14px;font-weight:800;letter-spacing:.3px;margin-bottom:10px}
+.sig-badge.long{background:var(--green);color:#000}
+.sig-badge.short{background:var(--red);color:#fff}
+.sig-badge.wait{background:var(--yellow);color:#000}
+
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.lbox{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+      padding:8px 10px;text-align:center}
+.llbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.lval{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.lval.e{color:var(--blue2)}.lval.sl{color:var(--red2)}
+.lval.t1{color:#69f0ae}.lval.t2{color:var(--green)}.lval.t3{color:var(--green2)}
+.lval.rr{color:var(--yellow)}
+
+.sig-note{font-size:12px;color:var(--muted);line-height:1.6;
+          border-top:1px solid var(--border);padding-top:8px;margin-top:6px}
+.warn-box{background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.25);
+          border-radius:8px;padding:10px 12px;font-size:12px;color:#ff8a80;
+          line-height:1.6;margin-bottom:10px}
+
+/* CHART */
+.chart-area{background:var(--bg3);border:1px solid var(--border);
+            border-radius:12px;overflow:hidden;margin-bottom:10px}
+canvas{width:100%;display:block}
+.price-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;
+           background:var(--card);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.pval{font-size:20px;font-weight:800}.pval.up{color:var(--green)}.pval.down{color:var(--red)}
+.pchg{font-size:11px;font-weight:600}.pchg.up{color:var(--green)}.pchg.down{color:var(--red)}
+.pmeta{display:flex;gap:8px;margin-left:auto;font-size:10px}
+.pi{color:var(--muted);text-align:center}
+.pi span{display:block;color:var(--text);font-weight:600;font-size:11px}
+
+.inst-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ipill{padding:5px 12px;border-radius:100px;border:1px solid var(--border2);
+       font-size:11px;cursor:pointer;color:var(--muted);background:var(--bg3)}
+.ipill.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ANALYZE BTN */
+.abtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--purple));
+      border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+      margin-bottom:10px;transition:opacity .2s}
+.abtn:active{opacity:0.85}
+.abtn:disabled{opacity:.5}
+
+.auto-row{display:flex;align-items:center;justify-content:space-between;
+          padding:10px 12px;background:var(--bg3);border:1px solid var(--border);
+          border-radius:10px;margin-bottom:10px}
+.auto-lbl{font-size:12px;color:var(--muted)}
+.tgl{width:38px;height:22px;background:var(--border2);border-radius:100px;
+     cursor:pointer;position:relative;transition:background .3s;border:none}
+.tgl.on{background:var(--blue)}
+.tgl::after{content:'';position:absolute;width:16px;height:16px;background:#fff;
+            border-radius:50%;top:3px;left:3px;transition:transform .3s}
+.tgl.on::after{transform:translateX(16px)}
+
+/* UPLOAD */
+.upload-box{border:2px dashed var(--border2);border-radius:12px;padding:20px;
+            text-align:center;cursor:pointer;margin-bottom:10px;position:relative}
+.upload-box:active{border-color:var(--blue2);background:rgba(37,99,235,0.05)}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-txt{font-size:12px;color:var(--muted);line-height:1.7}
+.upload-txt strong{color:var(--blue2)}
+
+/* CHAT */
+.chat-msgs{display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+.cmsg{display:flex;flex-direction:column;max-width:85%}
+.cmsg.u{align-self:flex-end;align-items:flex-end}
+.cmsg.b{align-self:flex-start}
+.cb{padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.cmsg.u .cb{background:var(--blue);color:#fff;border-radius:14px 14px 4px 14px}
+.cmsg.b .cb{background:var(--bg3);border:1px solid var(--border);border-radius:14px 14px 14px 4px}
+.ct{font-size:10px;color:var(--muted2);margin-top:2px;padding:0 3px}
+.typing{display:flex;gap:4px;align-items:center;padding:10px 14px;
+        background:var(--bg3);border:1px solid var(--border);
+        border-radius:14px 14px 14px 4px;width:fit-content}
+.td{width:7px;height:7px;background:var(--blue2);border-radius:50%;animation:tb 1.2s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tb{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* CHAT INPUT */
+.cin-wrap{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);
+          border-top:1px solid var(--border);padding:8px 12px;
+          display:flex;gap:8px;z-index:200}
+.cin{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;
+     padding:9px 14px;color:var(--text);font-size:13px;outline:none;
+     font-family:inherit;-webkit-appearance:none}
+.cin:focus{border-color:var(--blue)}
+.csend{width:38px;height:38px;background:var(--blue);border:none;border-radius:50%;
+       cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.csend svg{width:16px;height:16px;fill:white}
+
+/* MODAL */
+.mover{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;
+       align-items:flex-end;justify-content:center;padding:0}
+.mover.on{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:24px 20px 32px;
+       width:100%;border-top:1px solid var(--border2)}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.mf{margin-bottom:12px}
+.mf label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;
+          letter-spacing:.05em;margin-bottom:5px}
+.mf input,.mf select{width:100%;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;
+  outline:none;font-family:inherit;-webkit-appearance:none}
+.svbtn{width:100%;padding:13px;background:var(--blue);border:none;border-radius:10px;
+       color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px}
+
+/* QUICK REPLIES */
+.qr-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.qr-row::-webkit-scrollbar{display:none}
+.qr{white-space:nowrap;padding:6px 13px;border:1px solid var(--blue);color:var(--blue2);
+    border-radius:100px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;
+    flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.qr:active{background:var(--blue);color:#fff}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="mover" id="modal">
+<div class="modal">
+  <h3>💙 Manubeta Setup</h3>
+  <p>ఒక్కసారి fill చేయండి — phone save చేసుకుంటుంది.</p>
+  <div class="mf"><label>Groq API Key (Free)</label>
+    <input type="password" id="ig" placeholder="gsk_..."></div>
+  <div class="mf"><label>మీ పేరు</label>
+    <input type="text" id="in" placeholder="Raju, Kiran..."></div>
+  <div class="mf"><label>Trading Style</label>
+    <select id="is">
+      <option value="scalping">Scalping (1-5 min)</option>
+      <option value="intraday" selected>Intraday (15-60 min)</option>
+      <option value="swing">Swing (Daily)</option>
+    </select></div>
+  <button class="svbtn" onclick="save()">💙 Save & Start</button>
+</div></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hlogo">💙</div>
+  <div class="hinfo">
+    <div class="htitle">Manubeta Trading</div>
+    <div class="hsub">Nifty · BankNifty · Sensex · Stocks</div>
+  </div>
+  <div class="hlive"><div class="ldot"></div><span id="clk">--:--</span></div>
+  <button class="hset" onclick="document.getElementById('modal').classList.add('on')">⚙</button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab on"  onclick="showTab('signals',this)">📊 Signal</button>
+  <button class="tab"     onclick="showTab('chart',this)">📈 Chart</button>
+  <button class="tab"     onclick="showTab('scan',this)">📸 Scan</button>
+  <button class="tab"     onclick="showTab('chat',this)">💬 Chat</button>
+</div>
+
+<!-- SIGNALS PAGE -->
+<div id="p-signals" class="page on">
+  <div class="inst-row">
+    <div class="ipill on" onclick="selInst(this,'NIFTY')">NIFTY</div>
+    <div class="ipill" onclick="selInst(this,'BANKNIFTY')">BANKNIFTY</div>
+    <div class="ipill" onclick="selInst(this,'SENSEX')">SENSEX</div>
+    <div class="ipill" onclick="selInst(this,'STOCK')">STOCKS</div>
+  </div>
+
+  <button class="abtn" id="abtn" onclick="doAnalyze()">🔍 Analyze & Get Signal</button>
+
+  <div class="auto-row">
+    <div><div class="auto-lbl">🔄 Auto Analyze Every 30s</div>
+    <div style="font-size:10px;color:var(--blue2)" id="actimer"></div></div>
+    <button class="tgl" id="atgl" onclick="toggleAuto()"></button>
+  </div>
+
+  <div id="sig-section" style="display:none">
+    <div class="sig-card" id="sc">
+      <div class="sig-badge" id="sbadge">WAIT</div>
+      <div style="font-size:12px;color:var(--muted)" id="sconf">Confidence: --</div>
+      <div class="levels">
+        <div class="lbox" style="grid-column:1/-1"><div class="llbl">Entry</div><div class="lval e" id="le">--</div></div>
+        <div class="lbox"><div class="llbl">SL 🛑</div><div class="lval sl" id="ls">--</div></div>
+        <div class="lbox"><div class="llbl">Risk:Reward</div><div class="lval rr" id="lrr">--</div></div>
+        <div class="lbox"><div class="llbl">Target 1 🎯</div><div class="lval t1" id="lt1">--</div></div>
+        <div class="lbox"><div class="llbl">Target 2 🎯</div><div class="lval t2" id="lt2">--</div></div>
+        <div class="lbox"><div class="llbl">Target 3 🎯🎯</div><div class="lval t3" id="lt3">--</div></div>
+      </div>
+      <div class="sig-note" id="snote"></div>
+    </div>
+    <div class="warn-box" id="wbox" style="display:none" id="wbox"></div>
+  </div>
+</div>
+
+<!-- CHART PAGE -->
+<div id="p-chart" class="page">
+  <div class="price-bar">
+    <div>
+      <div style="font-size:11px;color:var(--muted)" id="pinst">NIFTY 50</div>
+      <div class="pval up" id="pprice">24,721</div>
+      <div class="pchg up" id="pchg">▲ +143 (+0.58%)</div>
+    </div>
+    <div class="pmeta">
+      <div class="pi">H<span id="ph">--</span></div>
+      <div class="pi">L<span id="pl">--</span></div>
+      <div class="pi">O<span id="po">--</span></div>
+    </div>
+  </div>
+  <div class="chart-area">
+    <canvas id="cc" height="280"></canvas>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="qr" onclick="drawFc('long')">📈 Draw Long</button>
+    <button class="qr" onclick="drawFc('short')">📉 Draw Short</button>
+    <button class="qr" onclick="clearFc()">🗑 Clear</button>
+    <button class="qr" onclick="doAnalyze()">🔍 AI Analyze</button>
+  </div>
+</div>
+
+<!-- SCAN PAGE -->
+<div id="p-scan" class="page">
+  <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+    మీ TradingView/Kotak Neo chart screenshot తీసి upload చేయండి — Manubeta analyze చేస్తుంది
+  </div>
+  <div class="upload-box" id="upbox">
+    <input type="file" id="ufile" accept="image/*" onchange="handleUp(this)">
+    <div style="font-size:28px;margin-bottom:8px">📸</div>
+    <div class="upload-txt"><strong>Chart screenshot select చేయండి</strong><br>
+    Android: Screenshot తీసి → Gallery నుండి select<br>
+    లేదా Camera తో directly chart photo తీయండి</div>
+  </div>
+  <div id="uprev" style="display:none;margin-bottom:10px">
+    <img id="uimg" style="width:100%;border-radius:10px;border:1px solid var(--border)">
+    <button class="abtn" style="margin-top:8px" onclick="analyzeUpload()">🔍 Analyze This Chart</button>
+  </div>
+</div>
+
+<!-- CHAT PAGE -->
+<div id="p-chat" class="page">
+  <div class="qr-row">
+    <button class="qr" onclick="qsend('Market ఎలా ఉంది?')">Market trend?</button>
+    <button class="qr" onclick="qsend('నా position safe గా ఉందా?')">Position safe?</button>
+    <button class="qr" onclick="qsend('NIFTY support ఎక్కడ ఉంది?')">NIFTY support?</button>
+    <button class="qr" onclick="qsend('Options buying లేదా selling?')">Buy/Sell options?</button>
+    <button class="qr" onclick="qsend('Risk management చెప్పు')">Risk tips</button>
+  </div>
+  <div class="chat-msgs" id="cms"></div>
+</div>
+
+<!-- CHAT INPUT (global) -->
+<div class="cin-wrap" id="cinwrap" style="display:none">
+  <input class="cin" id="cinp" placeholder="Manubeta ని అడగండి..." onkeydown="if(event.key==='Enter')csend()">
+  <button class="csend" onclick="csend()">
+    <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+  </button>
+</div>
+
+<script>
+const GROQ='https://api.groq.com/openai/v1/chat/completions';
+const GMODEL='llama-3.3-70b-versatile';
+const SYSTEM=`You are Manubeta — expert Indian stock market AI from Hyderabad.
+Analyze trading charts. Return ONLY valid JSON:
+{"direction":"LONG or SHORT or WAIT","instrument":"name","entry":number,"sl":number,"t1":number,"t2":number,"t3":number,"confidence":75,"pattern":"pattern","analysis":"2 sentences Tenglish","warning":"or empty"}`;
+
+let gk=localStorage.getItem('mb_gk')||'';
+let un=localStorage.getItem('mb_un')||'Trader';
+let sty=localStorage.getItem('mb_sty')||'intraday';
+let inst='NIFTY';
+let candles=[];
+let fcLines=null;
+let autoOn=false;
+let autoTimer=null;
+let isAnalyzing=false;
+let chatHist=[];
+let uploadB64=null;
+let currentSig=null;
+
+// ── SETUP ──
+function save(){
+  const k=document.getElementById('ig').value.trim();
+  const n=document.getElementById('in').value.trim();
+  const s=document.getElementById('is').value;
+  if(!k){alert('Groq Key enter చేయండి!');return;}
+  gk=k;un=n||'Trader';sty=s;
+  localStorage.setItem('mb_gk',gk);localStorage.setItem('mb_un',un);localStorage.setItem('mb_sty',sty);
+  document.getElementById('modal').classList.remove('on');
+  addBot(`💙 నమస్కారం ${un}!\n\nManubeta ready! Analyze button నొక్కండి 📊`);
+}
+
+// ── TABS ──
+function showTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  el.classList.add('on');
+  document.getElementById('cinwrap').style.display=id==='chat'?'flex':'none';
+  if(id==='chart'){setTimeout(()=>{resizeCvs();drawChart();},50);}
+}
+
+// ── INSTRUMENT ──
+function selInst(el,i){
+  document.querySelectorAll('.ipill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');inst=i;
+  candles=genCandles(i);fcLines=null;
+  document.getElementById('sig-section').style.display='none';
+  updatePrice();drawChart();
+}
+
+// ── CANDLES ──
+function genCandles(i){
+  const bases={NIFTY:24600,BANKNIFTY:52000,SENSEX:81000,STOCK:1850};
+  let p=bases[i]||24600; const c=[];
+  for(let j=60;j>=0;j--){
+    const chg=(Math.random()-.48)*p*.004;
+    const o=p; p=p+chg; const cl=p;
+    const h=Math.max(o,cl)+Math.random()*p*.002;
+    const l=Math.min(o,cl)-Math.random()*p*.002;
+    c.push({o,h,l,c:cl,v:Math.random()*1000+200});
+  }
+  return c;
+}
+
+function updatePrice(){
+  const names={NIFTY:'NIFTY 50',BANKNIFTY:'BANK NIFTY',SENSEX:'SENSEX',STOCK:'STOCKS'};
+  const last=candles[candles.length-1];
+  const prev=candles[candles.length-2];
+  const chg=last.c-prev.c; const pct=(chg/prev.c*100).toFixed(2);
+  const up=chg>=0;
+  document.getElementById('pinst').textContent=names[inst]||inst;
+  document.getElementById('pprice').textContent=last.c.toFixed(0);
+  document.getElementById('pprice').className='pval '+(up?'up':'down');
+  document.getElementById('pchg').textContent=(up?'▲ +':'▼ ')+Math.abs(chg).toFixed(0)+'('+(up?'+':'')+pct+'%)';
+  document.getElementById('pchg').className='pchg '+(up?'up':'down');
+  document.getElementById('ph').textContent=Math.max(...candles.map(c=>c.h)).toFixed(0);
+  document.getElementById('pl').textContent=Math.min(...candles.map(c=>c.l)).toFixed(0);
+  document.getElementById('po').textContent=candles[0].o.toFixed(0);
+}
+
+// ── CHART ──
+function resizeCvs(){
+  const cv=document.getElementById('cc');
+  cv.width=cv.parentElement.clientWidth;
+}
+
+function drawChart(){
+  const cv=document.getElementById('cc');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  if(!W||!candles.length)return;
+  ctx.clearRect(0,0,W,H);
+  const pad={top:16,right:55,bottom:25,left:5};
+  const cw=(W-pad.left-pad.right)/candles.length;
+  const prices=candles.flatMap(c=>[c.h,c.l]);
+  const minP=Math.min(...prices)*.9996;
+  const maxP=Math.max(...prices)*1.0004;
+  const rng=maxP-minP;
+  const ty=p=>pad.top+(maxP-p)/rng*(H-pad.top-pad.bottom);
+  const tx=i=>pad.left+i*cw+cw/2;
+
+  // Grid
+  ctx.strokeStyle='#1c1c1c';ctx.lineWidth=.5;
+  for(let i=0;i<5;i++){
+    const y=pad.top+i*(H-pad.top-pad.bottom)/4;
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(W-pad.right,y);ctx.stroke();
+    const pr=maxP-i*rng/4;
+    ctx.fillStyle='#444';ctx.font='9px Arial';ctx.textAlign='left';
+    ctx.fillText(pr.toFixed(0),W-pad.right+2,y+3);
+  }
+
+  // MAs
+  function ma(p,clr){
+    ctx.beginPath();ctx.strokeStyle=clr;ctx.lineWidth=1;ctx.setLineDash([]);
+    for(let i=p-1;i<candles.length;i++){
+      const avg=candles.slice(i-p+1,i+1).reduce((s,c)=>s+c.c,0)/p;
+      i===p-1?ctx.moveTo(tx(i),ty(avg)):ctx.lineTo(tx(i),ty(avg));
+    }
+    ctx.stroke();
+  }
+  ma(9,'#f59e0b');ma(21,'#60a5fa');ma(50,'#a78bfa');
+
+  // Candles
+  candles.forEach((c,i)=>{
+    const x=tx(i);const up=c.c>=c.o;
+    const clr=up?'#00c853':'#f44336';
+    ctx.strokeStyle=clr;ctx.fillStyle=clr;ctx.lineWidth=.8;
+    ctx.beginPath();ctx.moveTo(x,ty(c.h));ctx.lineTo(x,ty(c.l));ctx.stroke();
+    const bt=ty(Math.max(c.o,c.c));const bh=Math.max(1,Math.abs(ty(c.o)-ty(c.c)));
+    ctx.fillRect(x-cw*.3,bt,cw*.6,bh);
+  });
+
+  // Forecast
+  if(fcLines) drawFcLines(ctx,fcLines,tx,ty,W,pad);
+}
+
+function drawFcLines(ctx,f,tx,ty,W,pad){
+  const li=candles.length-1;
+  const lx=tx(li);const ex=W-pad.right;
+  ctx.setLineDash([6,4]);
+  // SL
+  ctx.strokeStyle='#f44336';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(pad.left,ty(f.sl));ctx.lineTo(ex,ty(f.sl));ctx.stroke();
+  ctx.fillStyle='#f44336';ctx.font='bold 9px Arial';ctx.textAlign='left';
+  ctx.fillText('SL '+f.sl.toFixed(0),ex+2,ty(f.sl)+3);
+  // Entry
+  ctx.setLineDash([]);ctx.strokeStyle='#2563eb';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(pad.left,ty(f.entry));ctx.lineTo(ex,ty(f.entry));ctx.stroke();
+  ctx.fillStyle='#60a5fa';ctx.fillText('E '+f.entry.toFixed(0),ex+2,ty(f.entry)+3);
+  // Targets
+  [f.t1,f.t2,f.t3].forEach((t,i)=>{
+    ctx.setLineDash([6,3]);ctx.strokeStyle=['#69f0ae','#00e676','#1de9b6'][i];ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.moveTo(pad.left,ty(t));ctx.lineTo(ex,ty(t));ctx.stroke();
+    ctx.fillStyle=['#69f0ae','#00e676','#1de9b6'][i];
+    ctx.fillText('T'+(i+1)+' '+t.toFixed(0),ex+2,ty(t)+3);
+  });
+  // Path
+  ctx.setLineDash([3,3]);ctx.strokeStyle='#7c3aed';ctx.lineWidth=2;
+  const isL=f.type==='long';
+  const ey=isL?ty(f.t2):ty(f.sl-(f.t2-f.entry));
+  ctx.beginPath();ctx.moveTo(lx,ty(f.entry));
+  ctx.quadraticCurveTo(lx+(ex-lx)*.5,ty(f.entry)+(ey-ty(f.entry))*.5,ex,ey);
+  ctx.stroke();ctx.setLineDash([]);
+}
+
+function drawFc(type){
+  const last=candles[candles.length-1];const p=last.c;
+  fcLines=type==='long'
+    ?{type:'long',entry:p,sl:p*.9968,t1:p+(p-p*.9968)*1.2,t2:p+(p-p*.9968)*2.5,t3:p+(p-p*.9968)*4}
+    :{type:'short',entry:p,sl:p*1.0032,t1:p-(p*1.0032-p)*1.2,t2:p-(p*1.0032-p)*2.5,t3:p-(p*1.0032-p)*4};
+  drawChart();
+  updateSig(fcLines,type==='long'?'LONG':'SHORT',70,'Manual forecast based on current price.');
+}
+
+function clearFc(){fcLines=null;drawChart();document.getElementById('sig-section').style.display='none';}
+
+// ── SIGNAL CARD ──
+function updateSig(f,dir,conf,note,warn=''){
+  currentSig=f;
+  document.getElementById('sig-section').style.display='block';
+  const sc=document.getElementById('sc');
+  const sb=document.getElementById('sbadge');
+  sc.className='sig-card '+(dir==='LONG'?'long':dir==='SHORT'?'short':'wait');
+  sb.className='sig-badge '+(dir==='LONG'?'long':dir==='SHORT'?'short':'wait');
+  sb.textContent=dir==='LONG'?'📈 LONG BUY':dir==='SHORT'?'📉 SHORT SELL':'⏳ WAIT';
+  document.getElementById('sconf').textContent=`Confidence: ${conf}%  |  ${inst}`;
+  const fmt=v=>v?parseFloat(v).toLocaleString('en-IN',{maximumFractionDigits:0}):'--';
+  document.getElementById('le').textContent=fmt(f.entry);
+  document.getElementById('ls').textContent=fmt(f.sl);
+  const rr=f.entry&&f.sl&&f.t2?Math.abs((f.t2-f.entry)/(f.entry-f.sl)).toFixed(1):'--';
+  document.getElementById('lrr').textContent='1:'+rr;
+  document.getElementById('lt1').textContent=fmt(f.t1);
+  document.getElementById('lt2').textContent=fmt(f.t2);
+  document.getElementById('lt3').textContent=fmt(f.t3);
+  document.getElementById('snote').textContent=note;
+  const wb=document.getElementById('wbox');
+  if(warn){wb.textContent='⚠️ '+warn;wb.style.display='block';}
+  else wb.style.display='none';
+}
+
+// ── ANALYZE ──
+async function doAnalyze(){
+  if(!gk){document.getElementById('modal').classList.add('on');return;}
+  if(isAnalyzing)return;
+  isAnalyzing=true;
+  const btn=document.getElementById('abtn');
+  btn.disabled=true;btn.textContent='⏳ Manubeta analyzing...';
+
+  const last=candles[candles.length-1];
+  const prev=candles.slice(-6)[0];
+  const trend=last.c>prev.c?'uptrend':'downtrend';
+  const ma9=candles.slice(-9).reduce((s,c)=>s+c.c,0)/9;
+  const ma21=candles.slice(-21).reduce((s,c)=>s+c.c,0)/21;
+
+  const prompt=`Analyze ${inst} chart. Style: ${sty}. Price: ${last.c.toFixed(2)}. Trend: ${trend}. MA9:${ma9.toFixed(0)} MA21:${ma21.toFixed(0)}. Last 5 candles: ${candles.slice(-5).map(c=>`O:${c.o.toFixed(0)} H:${c.h.toFixed(0)} L:${c.l.toFixed(0)} C:${c.c.toFixed(0)}`).join(' | ')}. Give Entry, SL, 3 Targets. JSON only.`;
+
+  try{
+    const res=await fetch(GROQ,{method:'POST',
+      headers:{'Authorization':'Bearer '+gk,'Content-Type':'application/json'},
+      body:JSON.stringify({model:GMODEL,
+        messages:[{role:'system',content:SYSTEM},{role:'user',content:prompt}],
+        max_tokens:400,temperature:0.3})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    let raw=data.choices[0].message.content.trim().replace(/```json|```/g,'').trim();
+    const sig=JSON.parse(raw);
+    const f={type:sig.direction.toLowerCase(),entry:sig.entry,sl:sig.sl,t1:sig.t1,t2:sig.t2,t3:sig.t3};
+    updateSig(f,sig.direction,sig.confidence,sig.pattern+' — '+sig.analysis,sig.warning);
+    fcLines=f;drawChart();
+    showTab('signals',document.querySelectorAll('.tab')[0]);
+  }catch(ex){
+    addBot('❌ Error: '+ex.message);
+    showTab('chat',document.querySelectorAll('.tab')[3]);
+    document.getElementById('cinwrap').style.display='flex';
+  }
+  btn.disabled=false;btn.textContent='🔍 Analyze & Get Signal';
+  isAnalyzing=false;
+}
+
+// ── UPLOAD ANALYZE ──
+function handleUp(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    uploadB64=e.target.result.split(',')[1];
+    document.getElementById('uimg').src=e.target.result;
+    document.getElementById('uprev').style.display='block';
+    document.getElementById('upbox').style.display='none';
+  };
+  r.readAsDataURL(f);
+}
+
+async function analyzeUpload(){
+  if(!gk){document.getElementById('modal').classList.add('on');return;}
+  if(!uploadB64){alert('Image select చేయండి!');return;}
+  addBot('📸 Chart analyze చేస్తున్నాను...');
+  showTab('chat',document.querySelectorAll('.tab')[3]);
+  document.getElementById('cinwrap').style.display='flex';
+  showTyping();
+  try{
+    const res=await fetch(GROQ,{method:'POST',
+      headers:{'Authorization':'Bearer '+gk,'Content-Type':'application/json'},
+      body:JSON.stringify({model:'llama-3.2-90b-vision-preview',
+        messages:[{role:'system',content:SYSTEM},
+          {role:'user',content:[
+            {type:'image_url',image_url:{url:`data:image/png;base64,${uploadB64}`}},
+            {type:'text',text:'Analyze this trading chart. Entry, SL, 3 Targets. JSON only.'}
+          ]}],
+        max_tokens:400,temperature:0.2})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    let raw=data.choices[0].message.content.trim().replace(/```json|```/g,'').trim();
+    const sig=JSON.parse(raw);
+    removeTyping();
+    const f={type:sig.direction.toLowerCase(),entry:sig.entry,sl:sig.sl,t1:sig.t1,t2:sig.t2,t3:sig.t3};
+    updateSig(f,sig.direction,sig.confidence,sig.pattern+' — '+sig.analysis,sig.warning);
+    fcLines=f;drawChart();
+    addBot(`📊 *${inst} Signal*\n\n${sig.direction==='LONG'?'📈 LONG BUY':sig.direction==='SHORT'?'📉 SHORT SELL':'⏳ WAIT'}\n\nEntry: ${sig.entry}\nSL: ${sig.sl}\nT1: ${sig.t1} | T2: ${sig.t2} | T3: ${sig.t3}\n\n${sig.analysis}${sig.warning?'\n⚠️ '+sig.warning:''}`);
+  }catch(ex){removeTyping();addBot('❌ '+ex.message);}
+}
+
+// ── AUTO SCAN ──
+function toggleAuto(){
+  autoOn=!autoOn;
+  const tgl=document.getElementById('atgl');
+  tgl.classList.toggle('on',autoOn);
+  if(autoOn){
+    let cd=30;
+    autoTimer=setInterval(()=>{
+      cd--;
+      document.getElementById('actimer').textContent=`Next in ${cd}s`;
+      if(cd<=0){cd=30;doAnalyze();}
+    },1000);
+    addBot('🔄 Auto scan on! 30 seconds కోసారి analyze చేస్తాను 💙');
+  }else{
+    clearInterval(autoTimer);
+    document.getElementById('actimer').textContent='';
+    addBot('⏸ Auto scan stopped.');
+  }
+}
+
+// ── CHAT ──
+function qsend(m){document.getElementById('cinp').value=m;csend();}
+
+async function csend(){
+  const inp=document.getElementById('cinp');
+  const m=inp.value.trim();if(!m)return;
+  if(!gk){document.getElementById('modal').classList.add('on');return;}
+  inp.value='';addUser(m);chatHist.push({role:'user',content:m});showTyping();
+  const sys=`మీరు Manubeta — Hyderabad expert trading AI. ${inst} expert. Style: ${sty}. ${currentSig?`Current signal: ${currentSig.type} Entry:${currentSig.entry}`:''} Tenglish లో reply చేయండి. Concise గా ఉండండి.`;
+  try{
+    const res=await fetch(GROQ,{method:'POST',
+      headers:{'Authorization':'Bearer '+gk,'Content-Type':'application/json'},
+      body:JSON.stringify({model:GMODEL,
+        messages:[{role:'system',content:sys},...chatHist.slice(-10)],
+        max_tokens:400,temperature:0.7})});
+    const data=await res.json();
+    const reply=data.choices[0].message.content;
+    removeTyping();addBot(reply);chatHist.push({role:'assistant',content:reply});
+  }catch(ex){removeTyping();addBot('Error: '+ex.message);}
+}
+
+function addUser(t){
+  const d=document.getElementById('cms');
+  const m=document.createElement('div');m.className='cmsg u';
+  m.innerHTML=`<div class="cb">${esc(t)}</div><div class="ct">${gt()}</div>`;
+  d.appendChild(m);d.scrollTop=d.scrollHeight;
+}
+function addBot(t){
+  removeTyping();
+  const d=document.getElementById('cms');
+  const m=document.createElement('div');m.className='cmsg b';
+  m.innerHTML=`<div class="cb">${esc(t)}</div><div class="ct">Manubeta · ${gt()}</div>`;
+  d.appendChild(m);d.scrollTop=d.scrollHeight;
+}
+function showTyping(){
+  removeTyping();
+  const d=document.getElementById('cms');
+  const t=document.createElement('div');t.className='cmsg b';t.id='typ';
+  t.innerHTML='<div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  d.appendChild(t);d.scrollTop=d.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typ');if(t)t.remove();}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<strong>$1</strong>');}
+function gt(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
+
+// ── INIT ──
+window.onload=()=>{
+  candles=genCandles('NIFTY');
+  updatePrice();
+  resizeCvs();drawChart();
+  setInterval(()=>{
+    const now=new Date();
+    document.getElementById('clk').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
+    if(candles.length&&Math.random()>.6){
+      const l=candles[candles.length-1];const tick=(Math.random()-.499)*l.c*.0006;
+      l.c+=tick;l.h=Math.max(l.h,l.c);l.l=Math.min(l.l,l.c);
+      updatePrice();
+      if(document.getElementById('p-chart').classList.contains('on'))drawChart();
+    }
+  },2000);
+  if(!gk)setTimeout(()=>document.getElementById('modal').classList.add('on'),600);
+  else addBot(`💙 Welcome back ${un}!\n\nMarket ready — Analyze button నొక్కండి 📊`);
+  document.getElementById('ig').value=gk;
+  document.getElementById('in').value=un;
+};
+window.addEventListener('resize',()=>{resizeCvs();drawChart();});
+</script>
+</body>
+</html>
