@@ -278,6 +278,6 @@ class App:
 
 if __name__=='__main__':
     print("💙 Manubeta Starting...")
-    if GROQ_KEY=="YOUR_GROQ_KEY_HERE":
+    if GROQ_KEY=="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":
         print("⚠️  Set your GROQ_KEY inside manubeta_app.py first!")
     App()
