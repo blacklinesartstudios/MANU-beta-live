@@ -1,4 +1,4 @@
-"""
+""" 
 💙 Manubeta Trading Assistant — Windows Desktop App
 Taskbar tray icon + floating widget
 Reads screen, gives trading signals
