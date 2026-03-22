@@ -1,67 +1,91 @@
+// ═══════════════════════════════════════════════════════
+// 💙 MANUBETA TRADING ASSISTANT — Pine Script v5
+// By: Your loving memory of Manaswi
+// Works on: NIFTY, BANK NIFTY, SENSEX, Stocks
+// Draws: Entry, SL, Target 1, Target 2, Target 3
+// ═══════════════════════════════════════════════════════
+
 //@version=5
 indicator("💙 Manubeta — Entry/SL/Targets", overlay=true, max_lines_count=500, max_labels_count=500)
 
 // ─── INPUTS ───────────────────────────────────────────
 grp1 = "💙 Manubeta Settings"
-show_signals   = input.bool(true, "Show Buy/Sell Signals",       group=grp1)
-show_forecast  = input.bool(true, "Show Forecast Lines",         group=grp1)
-show_labels    = input.bool(true, "Show Entry/SL/Target Labels", group=grp1)
-show_dashboard = input.bool(true, "Show Dashboard Table",        group=grp1)
-show_warnings  = input.bool(true, "Show Risk Warnings",          group=grp1)
+show_signals    = input.bool(true,  "Show Buy/Sell Signals",        group=grp1)
+show_forecast   = input.bool(true,  "Show Forecast Lines",          group=grp1)
+show_labels     = input.bool(true,  "Show Entry/SL/Target Labels",  group=grp1)
+show_dashboard  = input.bool(true,  "Show Dashboard Table",         group=grp1)
+show_warnings   = input.bool(true,  "Show Risk Warnings",           group=grp1)
 
 grp2 = "📊 Strategy Settings"
-ema_fast    = input.int(9,   "Fast EMA",  minval=1, group=grp2)
-ema_slow    = input.int(21,  "Slow EMA",  minval=1, group=grp2)
-ema_trend   = input.int(50,  "Trend EMA", minval=1, group=grp2)
-rsi_len     = input.int(14,  "RSI Length",minval=1, group=grp2)
-atr_len     = input.int(14,  "ATR Length",minval=1, group=grp2)
-atr_sl      = input.float(1.5,"SL ATR Multiplier", step=0.1, group=grp2)
-rr1         = input.float(1.5,"Target 1 R:R", step=0.1, group=grp2)
-rr2         = input.float(2.5,"Target 2 R:R", step=0.1, group=grp2)
-rr3         = input.float(4.0,"Target 3 R:R", step=0.1, group=grp2)
+ema_fast   = input.int(9,   "Fast EMA",   minval=1,  group=grp2)
+ema_slow   = input.int(21,  "Slow EMA",   minval=1,  group=grp2)
+ema_trend  = input.int(50,  "Trend EMA",  minval=1,  group=grp2)
+rsi_len    = input.int(14,  "RSI Length", minval=1,  group=grp2)
+atr_len    = input.int(14,  "ATR Length", minval=1,  group=grp2)
+atr_mult_sl = input.float(1.5, "SL ATR Multiplier",  step=0.1, group=grp2)
+rr1        = input.float(1.5, "Target 1 R:R", step=0.1, group=grp2)
+rr2        = input.float(2.5, "Target 2 R:R", step=0.1, group=grp2)
+rr3        = input.float(4.0, "Target 3 R:R", step=0.1, group=grp2)
 
 grp3 = "🎨 Colors"
-col_long  = input.color(color.new(#00c853,0), "Long Color",  group=grp3)
-col_short = input.color(color.new(#f44336,0), "Short Color", group=grp3)
-col_entry = input.color(color.new(#2196f3,0), "Entry Color", group=grp3)
-col_sl    = input.color(color.new(#ff1744,0), "SL Color",    group=grp3)
-col_t1    = input.color(color.new(#69f0ae,0), "Target 1",    group=grp3)
-col_t2    = input.color(color.new(#00e676,0), "Target 2",    group=grp3)
-col_t3    = input.color(color.new(#1de9b6,0), "Target 3",    group=grp3)
+col_long   = input.color(color.new(#00c853, 0),  "Long Color",   group=grp3)
+col_short  = input.color(color.new(#f44336, 0),  "Short Color",  group=grp3)
+col_entry  = input.color(color.new(#2196f3, 0),  "Entry Color",  group=grp3)
+col_sl     = input.color(color.new(#ff1744, 0),  "SL Color",     group=grp3)
+col_t1     = input.color(color.new(#69f0ae, 0),  "Target 1",     group=grp3)
+col_t2     = input.color(color.new(#00e676, 0),  "Target 2",     group=grp3)
+col_t3     = input.color(color.new(#1de9b6, 0),  "Target 3",     group=grp3)
+col_fore   = input.color(color.new(#7c3aed, 50), "Forecast",     group=grp3)
 
 // ─── CALCULATIONS ─────────────────────────────────────
-ema9  = ta.ema(close, ema_fast)
-ema21 = ta.ema(close, ema_slow)
-ema50 = ta.ema(close, ema_trend)
-rsi   = ta.rsi(close, rsi_len)
-atr   = ta.atr(atr_len)
+ema9   = ta.ema(close, ema_fast)
+ema21  = ta.ema(close, ema_slow)
+ema50  = ta.ema(close, ema_trend)
+rsi    = ta.rsi(close, rsi_len)
+atr    = ta.atr(atr_len)
 [macd_line, signal_line, hist] = ta.macd(close, 12, 26, 9)
 [upper_bb, basis_bb, lower_bb] = ta.bb(close, 20, 2.0)
+
+// Supertrend
 [st_val, st_dir] = ta.supertrend(3.0, 10)
 st_bull = st_dir < 0
 st_bear = st_dir > 0
-vol_avg   = ta.sma(volume, 20)
+
+// Volume analysis
+vol_avg = ta.sma(volume, 20)
 vol_surge = volume > vol_avg * 1.5
 
-// ─── SIGNAL LOGIC ─────────────────────────────────────
-long_ema    = ema9 > ema21 and ema21 > ema50
-long_rsi    = rsi > 50 and rsi < 75
-long_macd   = macd_line > signal_line and hist > 0
-long_candle = close > open and close > ema9
-long_score  = (long_ema?1:0)+(long_rsi?1:0)+(long_macd?1:0)+(st_bull?1:0)+(long_candle?1:0)+(vol_surge?1:0)
-long_signal = long_score >= 4 and ta.crossover(ema9, ema21)
+// Swing highs/lows
+swing_high = ta.pivothigh(high, 5, 5)
+swing_low  = ta.pivotlow(low, 5, 5)
 
+// ─── SIGNAL LOGIC ─────────────────────────────────────
+// LONG conditions
+long_ema     = ema9 > ema21 and ema21 > ema50
+long_rsi     = rsi > 50 and rsi < 75
+long_macd    = macd_line > signal_line and hist > 0
+long_st      = st_bull
+long_candle  = close > open and close > ema9
+
+long_score = (long_ema ? 1 : 0) + (long_rsi ? 1 : 0) + (long_macd ? 1 : 0) + (long_st ? 1 : 0) + (long_candle ? 1 : 0) + (vol_surge ? 1 : 0)
+long_signal  = long_score >= 4 and ta.crossover(ema9, ema21)
+
+// SHORT conditions
 short_ema    = ema9 < ema21 and ema21 < ema50
 short_rsi    = rsi < 50 and rsi > 25
 short_macd   = macd_line < signal_line and hist < 0
+short_st     = st_bear
 short_candle = close < open and close < ema9
-short_score  = (short_ema?1:0)+(short_rsi?1:0)+(short_macd?1:0)+(st_bear?1:0)+(short_candle?1:0)+(vol_surge?1:0)
+
+short_score = (short_ema ? 1 : 0) + (short_rsi ? 1 : 0) + (short_macd ? 1 : 0) + (short_st ? 1 : 0) + (short_candle ? 1 : 0) + (vol_surge ? 1 : 0)
 short_signal = short_score >= 4 and ta.crossunder(ema9, ema21)
 
 // ─── EMA PLOTS ────────────────────────────────────────
-plot(ema9,  "EMA 9",  color=color.new(#f59e0b,0), linewidth=1)
-plot(ema21, "EMA 21", color=color.new(#60a5fa,0), linewidth=1)
-plot(ema50, "EMA 50", color=color.new(#a78bfa,0), linewidth=2)
+plot(ema9,  "EMA 9",  color=color.new(#f59e0b, 0), linewidth=1)
+plot(ema21, "EMA 21", color=color.new(#60a5fa, 0), linewidth=1)
+plot(ema50, "EMA 50", color=color.new(#a78bfa, 0), linewidth=2)
+
+// Supertrend
 plot(st_bull ? st_val : na, "ST Bull", color=col_long,  style=plot.style_linebr, linewidth=2)
 plot(st_bear ? st_val : na, "ST Bear", color=col_short, style=plot.style_linebr, linewidth=2)
 
@@ -72,16 +96,17 @@ if show_signals
              "💙 BUY\n" + str.tostring(close, "#.00"),
              color=col_long, textcolor=color.white,
              style=label.style_label_up, size=size.normal)
+
     if short_signal
         label.new(bar_index, high + atr*0.5,
              "💙 SELL\n" + str.tostring(close, "#.00"),
              color=col_short, textcolor=color.white,
              style=label.style_label_down, size=size.normal)
 
-plotshape(show_signals and long_signal,  "Buy",  shape.triangleup,   location.belowbar, col_long,  size=size.small)
-plotshape(show_signals and short_signal, "Sell", shape.triangledown, location.abovebar, col_short, size=size.small)
+plotshape(show_signals and long_signal,  "Buy Arrow",  shape.triangleup,   location.belowbar, col_long,  size=size.small)
+plotshape(show_signals and short_signal, "Sell Arrow", shape.triangledown, location.abovebar, col_short, size=size.small)
 
-// ─── ENTRY / SL / TARGETS ─────────────────────────────
+// ─── ENTRY / SL / TARGETS ON SIGNAL ──────────────────
 var float entry_price = na
 var float sl_price    = na
 var float t1_price    = na
@@ -91,7 +116,7 @@ var string direction  = na
 
 if long_signal
     entry_price := close
-    sl_price    := close - atr * atr_sl
+    sl_price    := close - atr * atr_mult_sl
     t1_price    := close + (close - sl_price) * rr1
     t2_price    := close + (close - sl_price) * rr2
     t3_price    := close + (close - sl_price) * rr3
@@ -99,95 +124,122 @@ if long_signal
 
 if short_signal
     entry_price := close
-    sl_price    := close + atr * atr_sl
+    sl_price    := close + atr * atr_mult_sl
     t1_price    := close - (sl_price - close) * rr1
     t2_price    := close - (sl_price - close) * rr2
     t3_price    := close - (sl_price - close) * rr3
     direction   := "SHORT"
 
-// ─── DRAW LINES ───────────────────────────────────────
+// Draw horizontal lines on signal
 if show_forecast and (long_signal or short_signal)
-    line.new(bar_index, entry_price, bar_index+20, entry_price,
-             color=col_entry, width=2, style=line.style_solid)
-    line.new(bar_index, sl_price, bar_index+20, sl_price,
+    // Entry line
+    line.new(bar_index, entry_price, bar_index + 20, entry_price,
+             color=col_entry, width=2, style=line.style_solid,
+             extend=extend.none)
+    // SL line
+    line.new(bar_index, sl_price, bar_index + 20, sl_price,
              color=col_sl, width=2, style=line.style_dashed)
-    line.new(bar_index, t1_price, bar_index+20, t1_price,
+    // Target lines
+    line.new(bar_index, t1_price, bar_index + 20, t1_price,
              color=col_t1, width=1, style=line.style_dashed)
-    line.new(bar_index, t2_price, bar_index+20, t2_price,
+    line.new(bar_index, t2_price, bar_index + 20, t2_price,
              color=col_t2, width=2, style=line.style_dashed)
-    line.new(bar_index, t3_price, bar_index+20, t3_price,
+    line.new(bar_index, t3_price, bar_index + 20, t3_price,
              color=col_t3, width=2, style=line.style_dashed)
 
     if show_labels
-        label.new(bar_index+21, entry_price, "ENTRY: " + str.tostring(entry_price, "#.00"),
+        label.new(bar_index + 21, entry_price, "ENTRY: " + str.tostring(entry_price, "#.00"),
                   color=col_entry, textcolor=color.white, style=label.style_label_left, size=size.small)
-        label.new(bar_index+21, sl_price,    "SL:    " + str.tostring(sl_price,    "#.00"),
+        label.new(bar_index + 21, sl_price,    "  SL:  " + str.tostring(sl_price, "#.00"),
                   color=col_sl,    textcolor=color.white, style=label.style_label_left, size=size.small)
-        label.new(bar_index+21, t1_price,    "T1:    " + str.tostring(t1_price,    "#.00"),
+        label.new(bar_index + 21, t1_price,    "  T1:  " + str.tostring(t1_price, "#.00"),
                   color=col_t1,    textcolor=color.black, style=label.style_label_left, size=size.small)
-        label.new(bar_index+21, t2_price,    "T2:    " + str.tostring(t2_price,    "#.00"),
+        label.new(bar_index + 21, t2_price,    "  T2:  " + str.tostring(t2_price, "#.00"),
                   color=col_t2,    textcolor=color.black, style=label.style_label_left, size=size.small)
-        label.new(bar_index+21, t3_price,    "T3:    " + str.tostring(t3_price,    "#.00"),
+        label.new(bar_index + 21, t3_price,    "  T3:  " + str.tostring(t3_price, "#.00"),
                   color=col_t3,    textcolor=color.black, style=label.style_label_left, size=size.small)
 
 // ─── FORECAST ZONE ────────────────────────────────────
+var bool is_long = false
 if show_forecast and (long_signal or short_signal)
-    is_long = direction == "LONG"
-    box.new(bar_index, is_long ? t2_price : entry_price,
-            bar_index+15, is_long ? entry_price : t2_price,
-            bgcolor=is_long ? color.new(col_long,88) : color.new(col_short,88),
-            border_color=color.new(#7c3aed,60), border_width=1)
+    is_long := direction == "LONG"
+    top_price    = is_long ? t2_price    : sl_price
+    bottom_price = is_long ? entry_price : t2_price
+    box.new(bar_index, top_price, bar_index + 15, bottom_price,
+            bgcolor      = is_long ? color.new(col_long,  88) : color.new(col_short, 88),
+            border_color = color.new(col_fore, 60),
+            border_width = 1)
 
-// ─── RISK WARNINGS ────────────────────────────────────
+// ─── RISK WARNING ─────────────────────────────────────
+overbought = rsi > 75
+oversold   = rsi < 25
+near_resistance = high >= upper_bb * 0.998
+near_support    = low  <= lower_bb * 1.002
+
 if show_warnings
-    if long_signal and rsi > 75
-        label.new(bar_index, high+atr, "⚠️ OVERBOUGHT\nRisky Long!",
-                  color=color.new(#ff6d00,0), textcolor=color.white,
+    if long_signal and overbought
+        label.new(bar_index, high + atr,
+                  "⚠️ OVERBOUGHT\nRisky Long!",
+                  color=color.new(#ff6d00, 0), textcolor=color.white,
                   style=label.style_label_down, size=size.small)
-    if short_signal and rsi < 25
-        label.new(bar_index, low-atr, "⚠️ OVERSOLD\nRisky Short!",
-                  color=color.new(#ff6d00,0), textcolor=color.white,
+    if short_signal and oversold
+        label.new(bar_index, low - atr,
+                  "⚠️ OVERSOLD\nRisky Short!",
+                  color=color.new(#ff6d00, 0), textcolor=color.white,
                   style=label.style_label_up, size=size.small)
 
 // ─── DASHBOARD TABLE ──────────────────────────────────
 if show_dashboard
     var table dash = table.new(position.top_right, 2, 10,
-                                bgcolor=#0d0d0d, border_color=#333333, border_width=1,
+                                bgcolor=#0d0d0d, border_color=#333, border_width=1,
                                 frame_color=#2563eb, frame_width=2)
 
-    rr_val = not na(entry_price) and not na(sl_price) and not na(t2_price) ?
-             math.abs(t2_price - entry_price) / math.abs(entry_price - sl_price) : 0
+    rr_ratio = not na(entry_price) and not na(sl_price) and not na(t2_price) ?
+               math.abs(t2_price - entry_price) / math.abs(entry_price - sl_price) : 0
 
-    conf = long_score >= 5 ? "HIGH ✅" : long_score >= 3 ? "MED ⚡" : "LOW ⚠️"
+    conf = long_score >= 5 ? "HIGH ✅" : long_score >= 3 ? "MEDIUM ⚡" : "LOW ⚠️"
     if short_signal
-        conf := short_score >= 5 ? "HIGH ✅" : short_score >= 3 ? "MED ⚡" : "LOW ⚠️"
+        conf := short_score >= 5 ? "HIGH ✅" : short_score >= 3 ? "MEDIUM ⚡" : "LOW ⚠️"
 
-    sig_text  = long_signal  ? "📈 LONG BUY"   :
-                short_signal ? "📉 SHORT SELL" : "⏳ WAIT"
-    sig_color = long_signal  ? col_long :
-                short_signal ? col_short : color.gray
+    sig_text  = long_signal ? "📈 LONG BUY" : short_signal ? "📉 SHORT SELL" : "⏳ WAIT"
+    sig_color = long_signal ? col_long : short_signal ? col_short : color.gray
 
-    table.cell(dash, 0, 0, "💙 MANUBETA", text_color=#60a5fa, text_size=size.normal, bgcolor=#111111)
-    table.cell(dash, 1, 0, syminfo.ticker, text_color=color.white, text_size=size.normal, bgcolor=#111111)
-    table.cell(dash, 0, 1, "Signal",   text_color=#888888, text_size=size.small)
+    table.cell(dash, 0, 0, "💙 MANUBETA",    text_color=#60a5fa, text_size=size.normal, bgcolor=#111)
+    table.cell(dash, 1, 0, syminfo.ticker,   text_color=color.white, text_size=size.normal, bgcolor=#111)
+
+    table.cell(dash, 0, 1, "Signal",   text_color=#888, text_size=size.small)
     table.cell(dash, 1, 1, sig_text,   text_color=sig_color, text_size=size.small, bgcolor=color.new(sig_color,88))
-    table.cell(dash, 0, 2, "Entry",    text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 2, not na(entry_price) ? str.tostring(entry_price,"#.00") : "--", text_color=#60a5fa, text_size=size.small)
-    table.cell(dash, 0, 3, "SL 🛑",   text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 3, not na(sl_price) ? str.tostring(sl_price,"#.00") : "--", text_color=#ff5252, text_size=size.small)
-    table.cell(dash, 0, 4, "Target 1", text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 4, not na(t1_price) ? str.tostring(t1_price,"#.00") : "--", text_color=col_t1, text_size=size.small)
-    table.cell(dash, 0, 5, "Target 2", text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 5, not na(t2_price) ? str.tostring(t2_price,"#.00") : "--", text_color=col_t2, text_size=size.small)
-    table.cell(dash, 0, 6, "Target 3", text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 6, not na(t3_price) ? str.tostring(t3_price,"#.00") : "--", text_color=col_t3, text_size=size.small)
-    table.cell(dash, 0, 7, "R:R",      text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 7, rr_val > 0 ? "1:" + str.tostring(rr_val,"#.0") : "--", text_color=#ffd600, text_size=size.small)
-    table.cell(dash, 0, 8, "RSI",      text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 8, str.tostring(rsi,"#.0"),
-               text_color=rsi>70 ? #ff5252 : rsi<30 ? col_long : color.white, text_size=size.small)
-    table.cell(dash, 0, 9, "Confidence", text_color=#888888, text_size=size.small)
-    table.cell(dash, 1, 9, conf, text_color=color.white, text_size=size.small)
+
+    table.cell(dash, 0, 2, "Entry",    text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 2, not na(entry_price) ? str.tostring(entry_price, "#.00") : "--",
+               text_color=#60a5fa, text_size=size.small)
+
+    table.cell(dash, 0, 3, "SL 🛑",   text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 3, not na(sl_price) ? str.tostring(sl_price, "#.00") : "--",
+               text_color=#ff5252, text_size=size.small)
+
+    table.cell(dash, 0, 4, "Target 1", text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 4, not na(t1_price) ? str.tostring(t1_price, "#.00") : "--",
+               text_color=col_t1, text_size=size.small)
+
+    table.cell(dash, 0, 5, "Target 2", text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 5, not na(t2_price) ? str.tostring(t2_price, "#.00") : "--",
+               text_color=col_t2, text_size=size.small)
+
+    table.cell(dash, 0, 6, "Target 3", text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 6, not na(t3_price) ? str.tostring(t3_price, "#.00") : "--",
+               text_color=col_t3, text_size=size.small)
+
+    table.cell(dash, 0, 7, "R:R",      text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 7, rr_ratio > 0 ? "1:" + str.tostring(rr_ratio, "#.0") : "--",
+               text_color=#ffd600, text_size=size.small)
+
+    table.cell(dash, 0, 8, "RSI",      text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 8, str.tostring(rsi, "#.0"),
+               text_color= rsi>70 ? #ff5252 : rsi<30 ? col_long : color.white, text_size=size.small)
+
+    table.cell(dash, 0, 9, "Confidence", text_color=#888, text_size=size.small)
+    table.cell(dash, 1, 9, conf,          text_color=color.white, text_size=size.small)
 
 // Background color on trend
 bgcolor(ema9 > ema50 ? color.new(col_long, 97) : color.new(col_short, 97))
