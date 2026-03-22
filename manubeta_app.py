@@ -22,7 +22,7 @@ try:
 except: TRAY_OK = False
 
 # ════════════════════════════
-GROQ_KEY      = "YOUR_GROQ_KEY_HERE"
+GROQ_KEY      = "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"
 SCAN_INTERVAL = 15
 # ════════════════════════════
 
